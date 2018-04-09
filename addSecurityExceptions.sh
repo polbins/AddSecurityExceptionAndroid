@@ -2,15 +2,25 @@
 if [ $# -eq 0 ]
   then
     echo "No arguments supplied"
-    echo "Usage: ./addSecurityExceptions.sh APK filename"
+    echo "Usage: ./addSecurityExceptions.sh APK filename alias storepass/keypass"
     exit -1
 fi
+
+if [[ ! -z "$3"  &&  ! -z "$4" ]]
+    then
+        alias=$3
+        password=$4
+    else
+        alias=androiddebugkey
+        password=android
+fi
+
 if [ ! -z "$2" ]
 	then
 		debugKeystore=$2
 	else
     if [ ! -f ~/.android/debug.keystore ]; then
-      keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000
+      keytool -genkey -v -keystore ~/.android/debug.keystore -storepass $password -alias $alias -keypass $password -keyalg RSA -keysize 2048 -validity 10000
     fi
 		debugKeystore=~/.android/debug.keystore
 fi
@@ -40,5 +50,5 @@ fi
 java -jar apktool.jar empty-framework-dir --force $tmpDir
 echo "Building new APK $newFileName"
 java -jar apktool.jar b -o ./$newFileName $tmpDir
-jarsigner -verbose -keystore $debugKeystore -storepass android -keypass android ./$newFileName androiddebugkey
+jarsigner -verbose -keystore $debugKeystore -storepass $password -keypass $password ./$newFileName $alias
 
